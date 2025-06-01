@@ -16,6 +16,12 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/flags', require('./routes/flagRoutes'));
 app.use('/api/final-submit', require('./routes/gameRoutes'));
 
+app.get("/", (req,res) => {
+    return res.status(200).json({
+        message: "Working",
+        success:true,
+    })
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
