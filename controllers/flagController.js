@@ -10,9 +10,17 @@ const FLAG_VALUES = {
   'riddle1-input': 10,
   'riddle2-hover': 10,
   'riddle3-z-index': 10,
+
+  'FLAG{wind-trajectory-master}': 10,
+  'FLAG{memory-master}': 10,
+  'FLAG{you-are-elite}': 10,
+  'FLUX{Escape_The_Maze}': 10,
+  'CSE{You_Are_a_Debugging_Ninja}': 10,
+   'color': 10,
+  
 };
 
-const TOTAL_FLAGS = 9;
+const TOTAL_FLAGS = 15;
 
 const submitFlag = async (req, res) => {
   const { flag } = req.body;
