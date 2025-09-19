@@ -1,7 +1,7 @@
 const User = require('../models/User');
 
 const FLAG_VALUES = {
-  // Round 1 & 2 flags (10 points each)
+  // ✅ Round 1 & 2 flags (10 points each)
   'flag1-angular': 10,
   'flag2-jquery': 10,
   'flag3-vue': 10,
@@ -19,12 +19,13 @@ const FLAG_VALUES = {
   'CSE{You_Are_a_Debugging_Ninja}': 10,
   'color': 10,
 
-  // ✅ Round 3 flags (20 points each)
-  'PASS': 20,        // Flying Ship game
-  'Princess': 20,    // Princess of the Prison game
+  // ✅ Round 3 flags (10 points each)
+  'PASS': 10,        // Flying Ship game
+  'Princess': 10,    // Princess of the Prison game
 };
 
-const TOTAL_FLAGS = 17; // old 15 + 2 new ones
+// Total flags = 15 (old) + 2 (new Round 3) = 17
+const TOTAL_FLAGS = 17;
 
 const submitFlag = async (req, res) => {
   const { flag } = req.body;
@@ -64,7 +65,7 @@ const submitFlag = async (req, res) => {
     await user.save();
 
     res.json({
-      message: 'Flag accepted',
+      message: `Flag accepted (+${FLAG_VALUES[flag]} points)`,
       score: user.score,
       flagsSolved: user.solvedFlags.length,
       ...(user.duration && { duration: user.duration + ' seconds' }),
