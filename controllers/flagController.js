@@ -1,74 +1,126 @@
-const User = require('../models/User');
+import React, { useRef, useEffect, useState } from "react";
+import gsap from "gsap";
+import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
+import { BASE_URL } from "./config";
 
-const FLAG_VALUES = {
-  // Round 1 & 2 flags (10 points each)
-  'flag1-angular': 10,
-  'flag2-jquery': 10,
-  'flag3-vue': 10,
-  'flag1-phishing': 10,
-  'flag2-man in the middle': 10,
-  'flag3-packet sniffing': 10,
-  'riddle1-input': 10,
-  'riddle2-hover': 10,
-  'riddle3-z-index': 10,
+export default function Round3({ score, setScore }) {
+  const titleRef = useRef();
+  const descRef = useRef();
+  const user = JSON.parse(localStorage.getItem("user"));
+  const [flags, setFlags] = useState({ flag1: "", flag2: "" });
 
-  'FLAG{wind-trajectory-master}': 10,
-  'FLAG{memory-master}': 10,
-  'FLAG{you-are-elite}': 10,
-  'FLUX{Escape_The_Maze}': 10,
-  'CSE{You_Are_a_Debugging_Ninja}': 10,
-  'color': 10,
+  useEffect(() => {
+    gsap.fromTo(
+      titleRef.current,
+      { y: -40, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1, ease: "power3.out" }
+    );
+    gsap.fromTo(
+      descRef.current,
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, delay: 0.5, duration: 1 }
+    );
+  }, []);
 
-  // ✅ Round 3 flags (20 points each)
-  'PASS': 20,        // Flying Ship game
-  'Princess': 20,    // Princess of the Prison game
-};
-
-const TOTAL_FLAGS = 17; // old 15 + 2 new ones
-
-const submitFlag = async (req, res) => {
-  const { flag } = req.body;
-  const userId = req.user; // from JWT middleware
-
-  try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (user.solvedFlags.includes(flag)) {
-      return res.status(400).json({ message: 'Flag already submitted' });
+  const handleFlagSubmit = async (flagKey) => {
+    if (!user || !user.token) {
+      toast.error("You must be logged in.");
+      return;
     }
 
-    if (!FLAG_VALUES[flag]) {
-      return res.status(400).json({ message: 'Invalid flag' });
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/flags/submit`,
+        { flag: flags[flagKey] },
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+
+      toast.success(res.data.message);
+      if (res.data.score !== undefined) setScore(res.data.score);
+
+      // ✅ clear input after success
+      setFlags({ ...flags, [flagKey]: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Flag submission failed");
     }
+  };
 
-    // Set start time if it's the first flag
-    if (!user.startTime) {
-      user.startTime = new Date();
-    }
+  return (
+    <div
+      className="min-h-screen bg-black text-green-400 px-4 py-10 font-mono"
+      style={{ fontFamily: "'Press Start 2P', monospace" }}
+    >
+      <Toaster position="top-right" reverseOrder={false} />
 
-    // Update score and flag list
-    user.score += FLAG_VALUES[flag];
-    user.solvedFlags.push(flag);
+      <h1
+        ref={titleRef}
+        className="text-3xl md:text-4xl text-center mb-6 neon-glow"
+      >
+        ROUND 3: ADVANCED CHALLENGE
+      </h1>
 
-    // If all flags are now submitted, record endTime and duration
-    if (user.solvedFlags.length === TOTAL_FLAGS) {
-      user.endTime = new Date();
-      user.duration = Math.floor((user.endTime - user.startTime) / 1000); // in seconds
-    }
+      <p
+        ref={descRef}
+        className="text-sm md:text-base text-center max-w-3xl mx-auto text-green-300 mb-8"
+      >
+        Download the special round games and crack the challenges! Submit both
+        flags below. Each correct flag ={" "}
+        <span className="text-green-400 font-bold">20 points</span>.
+      </p>
 
-    await user.save();
+      {/* Download Link */}
+      <div className="text-center mb-10">
+        <a
+          href="https://nikhilkush078.github.io/ctf_main_website-/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block px-6 py-3 bg-green-700 hover:bg-green-500 text-black font-bold rounded shadow underline"
+        >
+          🔗 DOWNLOAD GAMES
+        </a>
+      </div>
 
-    res.json({
-      message: 'Flag accepted',
-      score: user.score,
-      flagsSolved: user.solvedFlags.length,
-      ...(user.duration && { duration: user.duration + ' seconds' }),
-    });
+      {/* Two Column Flag Inputs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        {/* Flag 1 */}
+        <div className="border border-green-500 p-6 rounded-lg shadow-lg bg-gray-900/60">
+          <h2 className="text-xl text-green-300 mb-3">Flag 1</h2>
+          <input
+            type="text"
+            value={flags.flag1}
+            onChange={(e) => setFlags({ ...flags, flag1: e.target.value })}
+            placeholder="Enter Flag 1..."
+            className="w-full p-2 mb-3 bg-black border border-green-500 text-green-200 placeholder-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 rounded"
+          />
+          <button
+            onClick={() => handleFlagSubmit("flag1")}
+            className="w-full py-2 px-4 bg-green-700 hover:bg-green-500 text-black font-bold rounded shadow"
+          >
+            SUBMIT FLAG 1
+          </button>
+        </div>
 
-  } catch (err) {
-    res.status(500).json({ message: 'Submission failed', error: err.message });
-  }
-};
-
-module.exports = { submitFlag };
+        {/* Flag 2 */}
+        <div className="border border-green-500 p-6 rounded-lg shadow-lg bg-gray-900/60">
+          <h2 className="text-xl text-green-300 mb-3">Flag 2</h2>
+          <input
+            type="text"
+            value={flags.flag2}
+            onChange={(e) => setFlags({ ...flags, flag2: e.target.value })}
+            placeholder="Enter Flag 2..."
+            className="w-full p-2 mb-3 bg-black border border-green-500 text-green-200 placeholder-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 rounded"
+          />
+          <button
+            onClick={() => handleFlagSubmit("flag2")}
+            className="w-full py-2 px-4 bg-green-700 hover:bg-green-500 text-black font-bold rounded shadow"
+          >
+            SUBMIT FLAG 2
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
